@@ -19,13 +19,18 @@ const getTodo = async (id: string): Promise<Todo | null> => {
   return todo;
 };
 
-export async function GET(request: Request, { params }: Segments) {
-  const todo = await getTodo(params.id);
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<Segments["params"]> }
+) {
+  const paramsQuery = await params;
+
+  const todo = await getTodo(paramsQuery.id);
 
   if (!todo) {
     return NextResponse.json(
       {
-        message: `Todo with id ${params.id} not found`,
+        message: `Todo with id ${paramsQuery.id} not found`,
       },
       {
         status: 404,
@@ -35,7 +40,7 @@ export async function GET(request: Request, { params }: Segments) {
 
   return NextResponse.json({
     todo: todo,
-    id: params.id,
+    id: paramsQuery.id,
   });
 }
 
