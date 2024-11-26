@@ -1,3 +1,4 @@
+import { auth } from "@/app/auth.config";
 import prisma from "@/lib/prisma";
 import { Todo } from "@prisma/client";
 import { NextResponse } from "next/server";
@@ -10,11 +11,19 @@ type Segments = {
 };
 
 const getTodo = async (id: string): Promise<Todo | null> => {
+  const session = await auth();
+
+  if (!session) {
+    return null;
+  }
+
   const todo = await prisma.todo.findFirst({
     where: {
       id: id,
     },
   });
+
+  if (todo?.userId !== session.user.id) return null;
 
   return todo;
 };

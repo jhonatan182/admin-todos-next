@@ -1,3 +1,4 @@
+import { auth } from "@/app/auth.config";
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -43,6 +44,19 @@ const todoSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  const session = await auth();
+
+  if (!session) {
+    return NextResponse.json(
+      {
+        message: "No estas autenticado",
+      },
+      {
+        status: 401,
+      }
+    );
+  }
+
   const { success, data } = todoSchema.safeParse(await request.json());
 
   if (!success) {
@@ -55,16 +69,30 @@ export async function POST(request: Request) {
   }
 
   const todo = await prisma.todo.create({
-    data: data,
+    data: { ...data, userId: session.user.id },
   });
 
   return NextResponse.json(todo);
 }
 
 export async function DELETE() {
+  const session = await auth();
+
+  if (!session) {
+    return NextResponse.json(
+      {
+        message: "No estas autenticado",
+      },
+      {
+        status: 401,
+      }
+    );
+  }
+
   await prisma.todo.deleteMany({
     where: {
       complete: true,
+      userId: session.user.id,
     },
   });
 

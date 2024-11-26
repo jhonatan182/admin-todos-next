@@ -1,5 +1,7 @@
+import { auth } from "@/app/auth.config";
 import prisma from "@/lib/prisma";
 import { NewTodo, TodosGrid } from "@/todos";
+import { redirect } from "next/navigation";
 
 export const metadata = {
   title: "Listado de server TODOS",
@@ -7,9 +9,18 @@ export const metadata = {
 };
 
 export default async function ServerTodosPage() {
+  const session = await auth();
+
+  if (!session) {
+    redirect("/api/auth/signin");
+  }
+
   const todos = await prisma.todo.findMany({
     orderBy: {
       description: "asc",
+    },
+    where: {
+      userId: session.user.id,
     },
   });
 
